@@ -43,10 +43,14 @@ Then start the UI:
 
 ```bash
 cd frontend
-cp .env.local.example .env.local
+cp .env.local.example .env.local   # NEXT_PUBLIC_API_URL, defaults to http://localhost:8000
 npm install
-npm run dev        # http://localhost:3000
+npm run dev                        # http://localhost:3000 (falls back to 3001 if taken)
 ```
+
+`.env.local` is git-ignored and baked in at build time — restart `npm run dev` after
+editing it. The backend's default CORS allows ports 3000–3002; see
+[`frontend/README.md`](frontend/README.md) for other ports and deployed APIs.
 
 ## Quick start (Docker + Postgres)
 
