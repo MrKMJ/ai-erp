@@ -1,7 +1,8 @@
 # AI ERP
 
-An AI-powered ERP backend for SME manufacturing / distribution, built to the
-provided architecture blueprint.
+An AI-powered ERP for SME manufacturing / distribution, built to the provided
+architecture blueprint. **Python/FastAPI backend** (this folder) + **Next.js
+frontend** ([`frontend/`](frontend/README.md)).
 
 **Design principle:** the ERP core is deterministic and auditable (double-entry
 accounting, an append-only inventory ledger, RBAC, workflow approvals). The AI
@@ -21,7 +22,8 @@ engine and a human.
 | LLM provider     | `rule` (offline planner, default) or `anthropic`   |
 | ML               | dependency-free forecasting / anomaly models       |
 | Events           | in-process domain event bus                        |
-| Packaging        | Docker + docker-compose                            |
+| Frontend         | Next.js 14 (App Router) · TypeScript · Tailwind    |
+| Packaging        | Docker + docker-compose (backend + Postgres)       |
 
 ## Quick start (local, zero setup)
 
@@ -36,6 +38,15 @@ uvicorn app.main:app --reload
 
 Open http://localhost:8000/docs. Log in via `POST /api/v1/auth/login` with
 `owner@demo.test` / `demo12345`, click **Authorize**, and explore.
+
+Then start the UI:
+
+```bash
+cd frontend
+cp .env.local.example .env.local
+npm install
+npm run dev        # http://localhost:3000
+```
 
 ## Quick start (Docker + Postgres)
 
