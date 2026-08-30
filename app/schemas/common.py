@@ -124,6 +124,27 @@ class InventoryAdjustIn(BaseModel):
     note: str = ""
 
 
+# ---- manufacturing ----
+class BomLineIn(BaseModel):
+    component_id: str
+    quantity: float = Field(gt=0)
+    scrap_rate: float = 0
+
+
+class BomIn(BaseModel):
+    product_id: str
+    output_quantity: float = Field(default=1, gt=0)
+    work_center_id: str | None = None
+    lines: list[BomLineIn]
+
+
+class ProductionOrderIn(BaseModel):
+    product_id: str
+    warehouse_id: str
+    quantity: float = Field(gt=0)
+    planned_date: date | None = None
+
+
 # ---- AI ----
 class ChatIn(BaseModel):
     message: str

@@ -34,7 +34,7 @@ class Role(UUIDAuditBase, TenantMixin):
     name: Mapped[str] = mapped_column(String(64), nullable=False)
     description: Mapped[str] = mapped_column(String(255), default="")
 
-    users: Mapped[list["User"]] = relationship(  # noqa: F821
+    users: Mapped[list[User]] = relationship(  # noqa: F821
         secondary=user_roles, back_populates="roles"
     )
     permissions: Mapped[list[Permission]] = relationship(

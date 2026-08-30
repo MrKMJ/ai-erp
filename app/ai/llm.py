@@ -12,8 +12,8 @@ import json
 import re
 from typing import Any
 
-from app.core.config import settings
 from app.ai.tools import REGISTRY
+from app.core.config import settings
 
 SYSTEM_PROMPT = (
     "You are the assistant inside an ERP system. You help staff understand their "

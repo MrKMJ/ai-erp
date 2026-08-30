@@ -1,24 +1,27 @@
-"""Seed a demo tenant with master data and ~90 days of transactions.
+"""Seed a demo tenant with master data, ~90 days of transactions and a BOM.
 
-    python -m scripts.seed
+    python -m scripts.seed            # create demo tenant if absent
+    python -m scripts.seed --reset    # delete the existing demo tenant first
 
 Prints login credentials at the end.
 """
 from __future__ import annotations
 
 import random
+import sys
 from datetime import date, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from app.core.database import SessionLocal, create_all
 from app.core.security import hash_password
 from app.models.master import Product, Supplier, Warehouse
 from app.models.tenant import Tenant
 from app.models.user import User
+from app.services import inventory_service as inv
+from app.services import manufacturing_service as mfg
 from app.services import purchasing_service as pur
 from app.services import sales_service as sal
-from app.services import inventory_service as inv
 from app.services.accounting_service import ensure_chart_of_accounts
 from app.services.recommendations import run_monitor
 
@@ -27,12 +30,28 @@ DEMO_PASSWORD = "demo12345"
 random.seed(42)
 
 
+def _reset(db, tenant_id: str) -> None:
+    """Delete every row belonging to the demo tenant, across all tenant tables."""
+    import app.models  # noqa: F401
+    from app.models.base import Base
+
+    db.execute(delete(Tenant).where(Tenant.id == tenant_id))
+    for table in reversed(Base.metadata.sorted_tables):
+        if "tenant_id" in table.c:
+            db.execute(delete(table).where(table.c.tenant_id == tenant_id))
+    db.commit()
+
+
 def _provision(db):
     from app.api.routes.auth import _provision_roles
 
     tenant = db.execute(select(Tenant).where(Tenant.slug == "demo")).scalar_one_or_none()
+    if tenant and "--reset" in sys.argv:
+        print("Resetting existing demo tenant...")
+        _reset(db, tenant.id)
+        tenant = None
     if tenant:
-        print("Demo tenant already exists; skipping.")
+        print("Demo tenant already exists; run with --reset to rebuild it.")
         return None
     tenant = Tenant(name="Demo Manufacturing Co", slug="demo", base_currency="USD")
     db.add(tenant)
@@ -143,11 +162,33 @@ def main() -> None:
                 pur.create_bill(db, tid, uid, po.id)
             db.commit()
 
+        # Manufacturing: Gadget X is assembled from 2x Widget A + 4x Part 42
+        bom = mfg.create_bom(db, tid, uid, {
+            "product_id": products[2].id, "output_quantity": 1,
+            "lines": [
+                {"component_id": products[0].id, "quantity": 2},
+                {"component_id": products[3].id, "quantity": 4, "scrap_rate": 0.05},
+            ],
+        })
+        db.commit()
+        mo = mfg.create_order(db, tid, uid, {
+            "product_id": products[2].id, "warehouse_id": wh.id, "quantity": 25,
+        })
+        mfg.release(db, tid, uid, mo.id)
+        mfg.issue_materials(db, tid, uid, mo.id)
+        mfg.complete(db, tid, uid, mo.id)
+        db.commit()
+        # a second one left planned so the UI shows the lifecycle
+        mfg.create_order(db, tid, uid, {
+            "product_id": products[2].id, "warehouse_id": wh.id, "quantity": 40,
+        })
+        db.commit()
+
         run_monitor(db, tid)
         db.commit()
 
         print("\n=== Demo data ready ===")
-        print(f"  API:      http://localhost:8000/docs")
+        print("  API:      http://localhost:8000/docs")
         print(f"  email:    {DEMO_EMAIL}")
         print(f"  password: {DEMO_PASSWORD}")
         print(f"  tenant:   {tid}")

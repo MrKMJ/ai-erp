@@ -34,7 +34,7 @@ class JournalEntry(UUIDAuditBase, TenantMixin):
     reversed_by_id: Mapped[str | None] = mapped_column(String(36))
     created_by: Mapped[str | None] = mapped_column(String(36))
 
-    lines: Mapped[list["JournalEntryLine"]] = relationship(
+    lines: Mapped[list[JournalEntryLine]] = relationship(
         back_populates="entry", cascade="all, delete-orphan", lazy="selectin"
     )
 

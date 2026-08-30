@@ -16,6 +16,6 @@ class User(UUIDAuditBase, TenantMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_owner: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    roles: Mapped[list["Role"]] = relationship(  # noqa: F821
+    roles: Mapped[list[Role]] = relationship(  # noqa: F821
         secondary="user_roles", back_populates="users", lazy="selectin"
     )

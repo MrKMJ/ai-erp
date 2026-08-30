@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import CurrentUser, require
-from app.core.exceptions import NotFound
 from app.models.sales import SalesInvoice, SalesOrder
 from app.schemas.common import PaymentIn, SalesOrderIn
 from app.services import sales_service as svc
@@ -28,12 +27,14 @@ def _order_dump(o: SalesOrder) -> dict:
 
 
 @router.get("/orders")
-def list_orders(current: CurrentUser = Depends(require("sales.read")), db: Session = Depends(get_db)):
-    rows = db.execute(
-        select(SalesOrder).where(SalesOrder.tenant_id == current.tenant_id)
-        .order_by(SalesOrder.created_at.desc())
-    ).scalars().all()
-    return [_order_dump(o) for o in rows]
+def list_orders(current: CurrentUser = Depends(require("sales.read")), db: Session = Depends(get_db),
+                limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0),
+                status: str | None = None):
+    stmt = select(SalesOrder).where(SalesOrder.tenant_id == current.tenant_id)
+    if status:
+        stmt = stmt.where(SalesOrder.status == status)
+    stmt = stmt.order_by(SalesOrder.created_at.desc()).limit(limit).offset(offset)
+    return [_order_dump(o) for o in db.execute(stmt).scalars().all()]
 
 
 @router.post("/orders", status_code=201)
@@ -63,10 +64,11 @@ def deliver_invoice(order_id: str, current: CurrentUser = Depends(require("sales
 
 @router.get("/invoices")
 def list_invoices(current: CurrentUser = Depends(require("sales.read")),
-                  db: Session = Depends(get_db)):
+                  db: Session = Depends(get_db),
+                  limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0)):
     rows = db.execute(
         select(SalesInvoice).where(SalesInvoice.tenant_id == current.tenant_id)
-        .order_by(SalesInvoice.created_at.desc())
+        .order_by(SalesInvoice.created_at.desc()).limit(limit).offset(offset)
     ).scalars().all()
     return [
         {"id": i.id, "number": i.number, "customer_id": i.customer_id, "status": i.status,

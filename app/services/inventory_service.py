@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.events import DomainEvent, bus
 from app.core.exceptions import BusinessRuleError
 from app.models.inventory import InventoryBalance, InventoryTransaction
-from app.models.master import Product, Warehouse
+from app.models.master import Product
 
 D0 = Decimal("0")
 

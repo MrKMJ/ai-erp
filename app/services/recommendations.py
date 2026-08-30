@@ -13,7 +13,6 @@ from app.models.ai import AIRecommendation
 from app.models.base import utcnow
 from app.models.master import Product
 from app.services import anomaly, forecasting
-from app.services import inventory_service as inv
 
 
 def _upsert(db: Session, tenant_id: str, *, type_: str, entity_type: str | None,

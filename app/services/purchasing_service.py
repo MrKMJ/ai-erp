@@ -7,7 +7,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.audit import record
-from app.core.config import settings
 from app.core.events import DomainEvent, bus
 from app.core.exceptions import BusinessRuleError, NotFound
 from app.models.master import Product, Supplier
@@ -138,6 +137,7 @@ def receive(db: Session, tenant_id: str, actor_id: str, order_id: str,
         order_id=order.id, receipt_date=date.today(),
     )
     db.add(gr)
+    received_value = Decimal("0")
     for ln in order.lines:
         outstanding = Decimal(str(ln.quantity)) - Decimal(str(ln.qty_received))
         qty = wanted.get(ln.product_id, outstanding)
@@ -150,6 +150,19 @@ def receive(db: Session, tenant_id: str, actor_id: str, order_id: str,
             reference_type="purchase_order", reference_id=order.id, created_by=actor_id,
         )
         ln.qty_received = Decimal(str(ln.qty_received)) + qty
+        received_value += (qty * Decimal(str(ln.unit_cost))).quantize(CENT)
+
+    # Goods received but not yet invoiced: DR Inventory / CR GRNI.
+    if received_value > 0:
+        acc.post_journal(
+            db, tenant_id=tenant_id, entry_date=gr.receipt_date,
+            description=f"Goods receipt {gr.number}",
+            reference_type="goods_receipt", reference_id=gr.id, created_by=actor_id,
+            lines=[
+                {"tag": "inventory", "debit": received_value},
+                {"tag": "grni", "credit": received_value},
+            ],
+        )
 
     fully = all(Decimal(str(l.qty_received)) >= Decimal(str(l.quantity)) for l in order.lines)
     order.status = "received" if fully else "approved"
@@ -170,7 +183,22 @@ def create_bill(db: Session, tenant_id: str, actor_id: str, order_id: str) -> Su
     )
     db.add(bill)
     db.flush()
-    je_lines = [{"tag": "inventory", "debit": bill.subtotal}]
+    # Clear GRNI raised at goods receipt: DR GRNI (+ DR Input tax) / CR AP.
+    # Falls back to DR Inventory for the portion (if any) not previously received.
+    received_value = Decimal("0")
+    for ln in order.lines:
+        received_value += (
+            Decimal(str(ln.qty_received)) * Decimal(str(ln.unit_cost))
+        ).quantize(CENT)
+    subtotal = Decimal(str(bill.subtotal))
+    grni_portion = min(received_value, subtotal)
+    inventory_portion = subtotal - grni_portion
+
+    je_lines = []
+    if grni_portion > 0:
+        je_lines.append({"tag": "grni", "debit": grni_portion})
+    if inventory_portion > 0:
+        je_lines.append({"tag": "inventory", "debit": inventory_portion})
     if Decimal(str(bill.tax_total)) > 0:
         je_lines.append({"tag": "tax_input", "debit": bill.tax_total})
     je_lines.append({"tag": "ap", "credit": bill.total})

@@ -27,7 +27,7 @@ class PurchaseOrder(UUIDAuditBase, TenantMixin):
     approved_by: Mapped[str | None] = mapped_column(String(36))
     source: Mapped[str] = mapped_column(String(16), default="user")  # user | ai
 
-    lines: Mapped[list["PurchaseOrderLine"]] = relationship(
+    lines: Mapped[list[PurchaseOrderLine]] = relationship(
         back_populates="order", cascade="all, delete-orphan", lazy="selectin"
     )
 

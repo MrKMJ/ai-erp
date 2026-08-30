@@ -9,7 +9,6 @@ Responsibilities (per architecture doc section 18):
 """
 from __future__ import annotations
 
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.ai import tools as toolmod

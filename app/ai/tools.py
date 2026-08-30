@@ -12,15 +12,15 @@ Write tools with risk >= "low" only produce DRAFTS or approval requests.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import date
-from typing import Any, Callable
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.ai import AIRecommendation
-from app.models.master import Customer, Product, Supplier, Warehouse
+from app.models.master import Product, Supplier, Warehouse
 from app.services import accounting_service as acc
 from app.services import forecasting
 from app.services import inventory_service as inv
@@ -216,6 +216,35 @@ def _recs(ctx: ToolContext, args: dict):
          "description": r.description, "estimated_impact": r.estimated_impact}
         for r in rows
     ]}
+
+
+@tool(
+    name="get_production_plan",
+    description="Open production orders with material shortfalls against current stock.",
+    permission="manufacturing.read", risk="read",
+    parameters={"type": "object", "properties": {}},
+    keywords=["production", "manufacturing", "work order", "shop floor", "make", "bom"],
+)
+def _production_plan(ctx: ToolContext, args: dict):
+    from app.models.manufacturing import ProductionOrder
+    from app.services import manufacturing_service as mfg
+
+    orders = ctx.db.execute(
+        select(ProductionOrder).where(
+            ProductionOrder.tenant_id == ctx.tenant_id,
+            ProductionOrder.status.in_(("planned", "released", "in_progress")),
+        )
+    ).scalars().all()
+    out = []
+    for o in orders:
+        product = ctx.db.get(Product, o.product_id)
+        mats = mfg.material_availability(ctx.db, ctx.tenant_id, o.id)
+        out.append({
+            "number": o.number, "product": product.name if product else "?",
+            "quantity": float(o.quantity), "status": o.status,
+            "shortfalls": [m for m in mats if m["shortfall"] > 0],
+        })
+    return {"orders": out}
 
 
 # ----------------------------------------------------------------------- ACTIONS (draft only)

@@ -15,7 +15,7 @@ class AIConversation(UUIDAuditBase, TenantMixin):
     title: Mapped[str] = mapped_column(String(255), default="New conversation")
     module: Mapped[str | None] = mapped_column(String(32))
 
-    messages: Mapped[list["AIMessage"]] = relationship(
+    messages: Mapped[list[AIMessage]] = relationship(
         back_populates="conversation", cascade="all, delete-orphan", lazy="selectin"
     )
 

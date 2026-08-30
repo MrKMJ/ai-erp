@@ -35,6 +35,11 @@ PERMISSIONS: dict[str, str] = {
     "accounting.read": "View chart of accounts and journals",
     "accounting.journal.post": "Post manual journal entries",
     "accounting.report.read": "View financial reports (P&L, balance sheet)",
+    # manufacturing
+    "manufacturing.read": "View BOMs and production orders",
+    "manufacturing.bom.write": "Create / edit bills of materials",
+    "manufacturing.order.write": "Create production orders",
+    "manufacturing.execute": "Release, issue materials, complete production orders",
     # AI
     "ai.chat": "Use the AI assistant (read-only tools)",
     "ai.action": "Let the AI create drafts / initiate workflows",
@@ -76,7 +81,12 @@ ROLE_TEMPLATES: dict[str, list[str]] = {
     ],
     "warehouse": [
         "product.read", "warehouse.read", "inventory.read", "inventory.adjust",
-        "purchase.receipt.write", "ai.chat",
+        "purchase.receipt.write", "manufacturing.read", "ai.chat",
+    ],
+    "production": [
+        "product.read", "warehouse.read", "inventory.read",
+        "manufacturing.read", "manufacturing.bom.write", "manufacturing.order.write",
+        "manufacturing.execute", "ai.chat", "ai.recommendation.read",
     ],
     "viewer": [k for k in PERMISSIONS if k.endswith(".read")],
 }

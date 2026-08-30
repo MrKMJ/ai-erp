@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from passlib.context import CryptContext
@@ -18,7 +18,7 @@ def verify_password(raw: str, hashed: str) -> bool:
 
 
 def create_access_token(subject: str, tenant_id: str, extra: dict | None = None) -> str:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     payload = {
         "sub": subject,
         "tid": tenant_id,

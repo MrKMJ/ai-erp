@@ -24,7 +24,7 @@ class SalesOrder(UUIDAuditBase, TenantMixin):
     total: Mapped[float] = mapped_column(Numeric(18, 2), default=0)
     notes: Mapped[str] = mapped_column(String(500), default="")
 
-    lines: Mapped[list["SalesOrderLine"]] = relationship(
+    lines: Mapped[list[SalesOrderLine]] = relationship(
         back_populates="order", cascade="all, delete-orphan", lazy="selectin"
     )
 
@@ -58,7 +58,7 @@ class SalesInvoice(UUIDAuditBase, TenantMixin):
     amount_paid: Mapped[float] = mapped_column(Numeric(18, 2), default=0)
     journal_entry_id: Mapped[str | None] = mapped_column(String(36))
 
-    lines: Mapped[list["SalesInvoiceLine"]] = relationship(
+    lines: Mapped[list[SalesInvoiceLine]] = relationship(
         back_populates="invoice", cascade="all, delete-orphan", lazy="selectin"
     )
 

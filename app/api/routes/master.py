@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -27,9 +27,14 @@ def _crud(path: str, model, schema: type[BaseModel], read_perm: str, write_perm:
     sub = APIRouter(prefix=f"/{path}")
 
     @sub.get("")
-    def list_(current: CurrentUser = Depends(require(read_perm)), db: Session = Depends(get_db)):
-        rows = db.execute(select(model).where(model.tenant_id == current.tenant_id)).scalars().all()
-        return [_dump(r) for r in rows]
+    def list_(current: CurrentUser = Depends(require(read_perm)), db: Session = Depends(get_db),
+              limit: int = Query(200, ge=1, le=500), offset: int = Query(0, ge=0),
+              q: str | None = Query(None, description="case-insensitive name/code filter")):
+        stmt = select(model).where(model.tenant_id == current.tenant_id)
+        if q and hasattr(model, "name"):
+            stmt = stmt.where(model.name.ilike(f"%{q}%"))
+        stmt = stmt.order_by(model.created_at.desc()).limit(limit).offset(offset)
+        return [_dump(r) for r in db.execute(stmt).scalars().all()]
 
     @sub.post("", status_code=201)
     def create_(body: schema, current: CurrentUser = Depends(require(write_perm)),

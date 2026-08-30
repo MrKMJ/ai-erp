@@ -8,7 +8,8 @@ _DB_PATH = os.path.join(os.path.dirname(__file__), "_test_ai_erp.db")
 os.environ["DATABASE_URL"] = "sqlite:///" + _DB_PATH.replace("\\", "/")
 os.environ["AUTO_CREATE_TABLES"] = "true"
 os.environ["AI_PROVIDER"] = "rule"
-os.environ["SECRET_KEY"] = "test-secret"
+os.environ["SECRET_KEY"] = "test-secret-key-that-is-long-enough-for-hs256-000"
+os.environ["RATE_LIMIT_ENABLED"] = "false"
 
 from fastapi.testclient import TestClient  # noqa: E402
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -29,12 +29,14 @@ def _po_dump(o: PurchaseOrder) -> dict:
 
 @router.get("/orders")
 def list_orders(current: CurrentUser = Depends(require("purchase.read")),
-                db: Session = Depends(get_db)):
-    rows = db.execute(
-        select(PurchaseOrder).where(PurchaseOrder.tenant_id == current.tenant_id)
-        .order_by(PurchaseOrder.created_at.desc())
-    ).scalars().all()
-    return [_po_dump(o) for o in rows]
+                db: Session = Depends(get_db),
+                limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0),
+                status: str | None = None):
+    stmt = select(PurchaseOrder).where(PurchaseOrder.tenant_id == current.tenant_id)
+    if status:
+        stmt = stmt.where(PurchaseOrder.status == status)
+    stmt = stmt.order_by(PurchaseOrder.created_at.desc()).limit(limit).offset(offset)
+    return [_po_dump(o) for o in db.execute(stmt).scalars().all()]
 
 
 @router.post("/orders", status_code=201)

@@ -6,7 +6,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import date, timedelta
-from decimal import Decimal
 from statistics import mean, pstdev
 
 from sqlalchemy import select
