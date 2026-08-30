@@ -17,7 +17,10 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 480
 
-    cors_origins: str = "http://localhost:3000,http://localhost:5173"
+    cors_origins: str = (
+        "http://localhost:3000,http://localhost:3001,http://localhost:3002,"
+        "http://localhost:5173"
+    )
 
     # AI gateway
     ai_provider: str = "rule"  # "rule" | "anthropic"
