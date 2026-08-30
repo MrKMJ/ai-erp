@@ -1,5 +1,21 @@
 # Deploying AI ERP to production (Fly.io)
 
+## TL;DR — one script
+
+```bash
+curl -L https://fly.io/install.sh | sh      # if you don't have flyctl
+fly auth login
+./deploy.sh                                  # creates apps + DB + secrets, deploys both
+# later, code-only:
+./deploy.sh --redeploy
+```
+
+`deploy.sh` is idempotent and needs no editing. The manual steps below are what it
+runs, for reference or non-Fly targets.
+
+---
+
+
 Two Fly apps + one managed Postgres:
 
 | App           | Source          | URL (example)                 |
