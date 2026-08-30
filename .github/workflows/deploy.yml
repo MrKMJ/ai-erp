@@ -1,0 +1,33 @@
+name: Deploy (Fly.io)
+
+# Requires repo secret FLY_API_TOKEN (fly tokens create deploy -x 999999h).
+# Runs after CI passes on the default branch. Manual runs via workflow_dispatch.
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      API_URL: https://ai-erp-api.fly.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy API (runs `alembic upgrade head` as release_command)
+        run: flyctl deploy --remote-only --config fly.toml
+
+      - name: Deploy web
+        working-directory: frontend
+        run: flyctl deploy --remote-only --config fly.toml --build-arg NEXT_PUBLIC_API_URL=$API_URL

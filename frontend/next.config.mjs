@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Minimal server bundle for the Docker image (Fly.io deploy).
+  output: "standalone",
   // Type errors still fail the build; ESLint is optional here (no eslint-config-next
   // dependency bundled). Add `eslint-config-next` + an .eslintrc and remove this to lint.
   eslint: { ignoreDuringBuilds: true },

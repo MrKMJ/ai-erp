@@ -8,4 +8,8 @@ __pycache__/
 .ruff_cache/
 tests/
 .git/
+.github/
 .env
+frontend/
+docs/
+*.md

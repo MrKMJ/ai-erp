@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useToast } from "@/lib/toast";
 
 export function PageHeader({
   title,
@@ -150,13 +151,17 @@ export function Badge({ children, className = "" }: { children: React.ReactNode;
 export function useAsyncAction() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  async function run(fn: () => Promise<void>) {
+  const toast = useToast();
+  async function run(fn: () => Promise<void>, okMessage?: string) {
     setBusy(true);
     setError(null);
     try {
       await fn();
+      if (okMessage) toast.success(okMessage);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      const msg = e instanceof Error ? e.message : "Something went wrong";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setBusy(false);
     }

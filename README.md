@@ -52,19 +52,35 @@ npm run dev                        # http://localhost:3000 (falls back to 3001 i
 editing it. The backend's default CORS allows ports 3000–3002; see
 [`frontend/README.md`](frontend/README.md) for other ports and deployed APIs.
 
-## Quick start (Docker + Postgres)
+## Quick start (Docker + Postgres + web)
 
 ```bash
-docker compose up --build
-docker compose exec api python -m scripts.seed
+docker compose up --build              # db + api (migrations auto-run) + web on :3000
+docker compose run --rm api seed       # optional demo data
+```
+
+## Database migrations
+
+Dev/SQLite auto-creates tables (`AUTO_CREATE_TABLES=true`). Everywhere else:
+
+```bash
+alembic upgrade head                   # apply
+alembic revision --autogenerate -m "add X"   # after changing models
+alembic check                          # CI: fails if models drifted from migrations
 ```
 
 ## Run tests
 
 ```bash
-pip install pytest
-pytest
+pip install pytest ruff
+pytest && ruff check app scripts
 ```
+
+## Deploy
+
+See [DEPLOY.md](DEPLOY.md) — Fly.io (API + web + managed Postgres) with a GitHub
+Actions pipeline. The image is a plain container and also runs on Render / Railway
+/ ECS / Cloud Run.
 
 ## Enabling real LLM reasoning
 
@@ -82,23 +98,29 @@ are unchanged. Without a key it transparently falls back to the rule planner.
 
 ```
 app/
-  core/         config, db, security, RBAC catalogue, event bus, audit
-  models/       tenants, users, rbac, master data, sales, purchasing,
-                inventory, accounting, ai, workflow
+  core/         config (prod-validated), db, security, RBAC catalogue,
+                event bus, audit, middleware (request id / security headers /
+                rate limit), structured logging, pagination
+  models/       tenants, users, rbac, master data, sales, purchasing, inventory,
+                accounting, manufacturing, ai, workflow, document_sequences
   services/     deterministic business logic
-                  inventory_service   append-only ledger + cached balances
-                  sales_service       order → deliver → invoice → payment (+ JEs)
-                  purchasing_service  PO → approval → receipt → bill → payment
-                  accounting_service  double-entry engine, trial balance, P&L
-                  forecasting         demand / stockout / cash-flow models
-                  anomaly             supplier price & expense outliers
-                  recommendations     turns analysis into AIRecommendation rows
+                  inventory_service     append-only ledger + cached balances
+                  sales_service         order → deliver → invoice → payment (+ JEs)
+                  purchasing_service    PO → approval → receipt (GRNI) → bill → pay
+                  manufacturing_service BOM → production order → issue → finish (WIP)
+                  accounting_service    double-entry engine, trial balance, P&L
+                  forecasting           demand / stockout / cash-flow models
+                  anomaly               supplier price & expense outliers
+                  recommendations       turns analysis into AIRecommendation rows
+                  numbering             gap-free locked document sequences
   ai/
     tools.py        explicit tool layer over the services (permission + risk)
     gateway.py      the single AI entry point: auth, policy, audit, execution
     llm.py          RuleProvider (offline) / AnthropicProvider (tool-use loop)
     subscribers.py  domain events → AI reactions
-  api/routes/    auth, master-data, sales, purchasing, inventory, accounting, ai
+  api/routes/    auth, master-data, sales, purchasing, inventory, manufacturing,
+                 accounting, ai
+alembic/         migrations   ·   frontend/   Next.js UI   ·   DEPLOY.md
 ```
 
 ## AI safety model
@@ -120,16 +142,22 @@ app/
 | Sales       | `POST /api/v1/sales/orders` → `/confirm` → `/deliver-invoice` |
 | Purchasing  | `POST /api/v1/purchasing/orders` → `/submit` → `/receive` → `/bill` → `/pay` |
 | Inventory   | `GET /api/v1/inventory/position` · `/ledger` · `/forecast/{id}` |
+| Manufacturing | `POST /api/v1/manufacturing/boms` · `/orders` → `/release` → `/issue-materials` → `/complete` |
 | Accounting  | `GET /api/v1/accounting/reports/profit-loss` · `/trial-balance` |
 | AI          | `POST /api/v1/ai/chat` · `/execute` · `GET /ai/recommendations` · `POST /ai/monitor/run` |
 
-## Known simplifications (MVP)
+## Accounting flows
 
-* Tables are auto-created from ORM metadata; add Alembic before production.
-* Goods receipts post inventory value at billing time (no separate GRNI account).
-* Document numbering is a per-tenant count, not a gap-free locked sequence.
-* Forecasting / anomaly models are statistical baselines; swap for
-  scikit-learn / XGBoost / Prophet behind the same service interface.
-* RAG, manufacturing (BOM/MRP), document OCR and specialised agents are scoped
-  for later releases (see the architecture roadmap) — the extension points
-  (event bus, tool registry, recommendation entity) are already in place.
+Every document posts a balanced journal entry; posted entries are reversed, never
+edited. Purchasing uses **GRNI** (Goods Received Not Invoiced): receipt posts
+`DR Inventory / CR GRNI`, billing clears it `DR GRNI / CR AP`. Manufacturing uses
+a **WIP** account: material issue `DR WIP / CR Inventory`, completion
+`DR Inventory / CR WIP` at accumulated cost.
+
+## Not built yet (architecture roadmap)
+
+RAG document Q&A, document OCR / invoice extraction, MRP planning across BOM
+levels, specialised autonomous agents. The extension points (event bus, tool
+registry, recommendation entity, agent-ready gateway) are in place. Forecasting /
+anomaly models are statistical baselines — swap for scikit-learn / XGBoost /
+Prophet behind the same service interface.

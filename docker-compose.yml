@@ -1,3 +1,6 @@
+# Local production-like stack: Postgres + API (migrations run on start) + web.
+#   docker compose up --build
+#   docker compose run --rm api seed      # optional demo data
 services:
   db:
     image: postgres:16-alpine
@@ -21,14 +24,26 @@ services:
       db:
         condition: service_healthy
     environment:
+      APP_ENV: production
       DATABASE_URL: postgresql+psycopg://erp:erp@db:5432/ai_erp
-      SECRET_KEY: dev-secret-change-me
-      AUTO_CREATE_TABLES: "true"
+      SECRET_KEY: local-compose-secret-please-change-me-32chars
+      AUTO_CREATE_TABLES: "false"
+      CORS_ORIGINS: http://localhost:3000
       AI_PROVIDER: ${AI_PROVIDER:-rule}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       AI_MODEL: ${AI_MODEL:-claude-sonnet-5}
     ports:
       - "8000:8000"
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
 
 volumes:
   pgdata:

@@ -44,6 +44,7 @@ with `npm run dev -- -p 3000`.
 | `/ai`          | AI Command Center: recommendations, tool catalogue (with your access), full chat with expandable tool-evidence |
 | `/sales`       | Orders (confirm / deliver & invoice), invoices, receivables |
 | `/purchasing`  | POs (submit / receive / bill), approval queue (AI-raised POs flagged), bills (pay), payables |
+| `/manufacturing` | BOMs (create), production orders (release → issue materials → complete), live material shortfall panel |
 | `/inventory`   | Stock position with reorder flags, movement ledger |
 | `/accounting`  | P&L, trial balance (with balanced check), journal entries |
 | `/customers` `/suppliers` `/products` | Master-data lists + create |
@@ -55,6 +56,10 @@ when you want analysis.
 
 ## Notes
 
-- ESLint is not wired into `next build` (no `eslint-config-next` dependency) — see
-  `next.config.mjs`. TypeScript type-checking still runs.
+- Global toast notifications, `error.tsx` boundary, `not-found.tsx`, `loading.tsx`,
+  and a mobile drawer nav are wired in.
+- `output: "standalone"` in `next.config.mjs` for a small Docker image; see
+  `Dockerfile` / `fly.toml` and the repo's `DEPLOY.md`.
+- ESLint is not wired into `next build` (no `eslint-config-next` dependency).
+  TypeScript type-checking still runs.
 - Auth is client-side only (JWT in `localStorage`); there is no SSR-protected route.
