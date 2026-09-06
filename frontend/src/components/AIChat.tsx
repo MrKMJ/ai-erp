@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { api } from "@/lib/api";
+import Markdown from "@/components/Markdown";
 import type { ChatResponse, ChatEvidence } from "@/lib/types";
 
 interface Msg {
@@ -77,13 +78,13 @@ export default function AIChat({ compact = false }: { compact?: boolean }) {
         {messages.map((m, i) => (
           <div key={i} className={m.role === "user" ? "text-right" : ""}>
             <div
-              className={`inline-block max-w-[92%] whitespace-pre-wrap rounded-2xl px-4 py-2 text-sm ${
+              className={`inline-block max-w-[92%] rounded-2xl px-4 py-2 text-sm ${
                 m.role === "user"
-                  ? "bg-brand-600 text-white"
+                  ? "whitespace-pre-wrap bg-brand-600 text-white"
                   : "bg-slate-100 text-slate-800"
               }`}
             >
-              {m.content}
+              {m.role === "user" ? m.content : <Markdown>{m.content}</Markdown>}
             </div>
             {m.evidence && m.evidence.length > 0 && (
               <div className="mt-2 space-y-2">

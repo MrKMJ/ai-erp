@@ -33,3 +33,14 @@ def test_chat_works_with_rule_provider(client, tenant):
     r = client.post("/api/v1/ai/chat", headers=h, json={"message": "show me the cash flow forecast"})
     assert r.status_code == 200
     assert r.json()["evidence"][0]["name"] == "get_cash_flow"
+
+
+def test_chat_answer_is_plain_language_not_json(client, tenant):
+    h, _ = _make_env(client, tenant)
+    answer = client.post(
+        "/api/v1/ai/chat", headers=h, json={"message": "what is our profit and loss?"}
+    ).json()["answer"]
+    # readable prose, not a JSON dump
+    assert "```json" not in answer
+    assert '"net_profit"' not in answer
+    assert "profit" in answer.lower() and "$" in answer
