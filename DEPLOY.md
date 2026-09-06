@@ -22,7 +22,7 @@ an API web service (Docker), a static site (Next export), and a Postgres.
 ```bash
 # create an empty repo at github.com/new (name it e.g. ai-erp), then:
 git remote add origin https://github.com/<you>/ai-erp.git
-git push -u origin master
+git push -u origin main
 ```
 
 ### 2. Deploy
@@ -34,14 +34,15 @@ git push -u origin master
 
 ### 3. Seed a demo tenant (optional)
 
-Render dashboard → **ai-erp-api → Shell**:
+From your laptop, against the running API (no shell needed):
 
 ```bash
-python -m scripts.seed
+python -m scripts.seed_remote --api https://<your-api>.onrender.com
 ```
 
-Then open `https://ai-erp-web.onrender.com` and log in with
-`owner@demo.test` / `demo12345`.
+…or Render dashboard → **ai-erp-api → Shell** → `python -m scripts.seed`.
+
+Then open the web URL and log in with `owner@demo-erp.com` / `demo12345`.
 
 ### Free-tier realities
 

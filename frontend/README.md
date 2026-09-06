@@ -13,7 +13,7 @@ npm run dev                           # http://localhost:3000
 ```
 
 The backend must be running (`uvicorn app.main:app` in the parent folder) and seeded
-(`python -m scripts.seed`). Log in with **owner@demo.test / demo12345**.
+(`python -m scripts.seed`). Log in with **owner@demo-erp.com / demo12345**.
 
 ### `.env.local`
 

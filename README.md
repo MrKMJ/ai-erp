@@ -37,7 +37,7 @@ uvicorn app.main:app --reload
 ```
 
 Open http://localhost:8000/docs. Log in via `POST /api/v1/auth/login` with
-`owner@demo.test` / `demo12345`, click **Authorize**, and explore.
+`owner@demo-erp.com` / `demo12345`, click **Authorize**, and explore.
 
 Then start the UI:
 
@@ -83,12 +83,6 @@ alembic check                          # CI: fails if models drifted from migrat
 pip install pytest ruff
 pytest && ruff check app scripts
 ```
-
-## Deploy
-
-See [DEPLOY.md](DEPLOY.md) — Fly.io (API + web + managed Postgres) with a GitHub
-Actions pipeline. The image is a plain container and also runs on Render / Railway
-/ ECS / Cloud Run.
 
 ## Enabling real LLM reasoning
 

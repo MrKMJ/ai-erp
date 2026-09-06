@@ -25,7 +25,7 @@ from app.services import sales_service as sal
 from app.services.accounting_service import ensure_chart_of_accounts
 from app.services.recommendations import run_monitor
 
-DEMO_EMAIL = "owner@demo.test"
+DEMO_EMAIL = "owner@demo-erp.com"
 DEMO_PASSWORD = "demo12345"
 random.seed(42)
 

@@ -8,7 +8,7 @@ import { API_URL } from "@/lib/api";
 export default function LoginPage() {
   const { login, me, loading } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState("owner@demo.test");
+  const [email, setEmail] = useState("owner@demo-erp.com");
   const [password, setPassword] = useState("demo12345");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -64,7 +64,7 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-4 text-center text-xs text-slate-400">
-          Demo: owner@demo.test / demo12345
+          Demo: owner@demo-erp.com / demo12345
           <br />
           API: {API_URL}
         </p>
