@@ -9,6 +9,8 @@ Responsibilities (per architecture doc section 18):
 """
 from __future__ import annotations
 
+import logging
+
 from sqlalchemy.orm import Session
 
 from app.ai import tools as toolmod
@@ -107,12 +109,20 @@ class AIGateway:
             else:
                 answer = plan["text"]
         else:
-            out = self.provider.run(
-                message, history,
-                lambda n, a: self.execute_tool(n, a, convo.id),
-            )
-            answer = out["text"]
-            evidence = out.get("evidence", [])
+            try:
+                out = self.provider.run(
+                    message, history,
+                    lambda n, a: self.execute_tool(n, a, convo.id),
+                )
+                answer = out["text"]
+                evidence = out.get("evidence", [])
+            except Exception as exc:  # noqa: BLE001 - never 500 on an LLM/network hiccup
+                logging.getLogger("erp.ai").exception("LLM provider failed")
+                answer = (
+                    "The AI model is unavailable right now "
+                    f"({exc.__class__.__name__}). Any tool results below are still "
+                    "accurate — they come straight from the ERP."
+                )
 
         self.db.add(AIMessage(tenant_id=self.current.tenant_id, conversation_id=convo.id,
                               role="assistant", content=answer, evidence=_jsonify(evidence)))

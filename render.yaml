@@ -37,8 +37,16 @@ services:
         value: "true"
       - key: WEB_CONCURRENCY
         value: "2"
+      # AI: "rule" is the offline planner (chat over tools, recommendations,
+      # forecasting) — fully working, no key. For LLM-generated answers set
+      # AI_PROVIDER=anthropic in the dashboard and paste your key below
+      # (Anthropic Console -> API keys; separate from a Claude subscription).
       - key: AI_PROVIDER
         value: rule
+      - key: AI_MODEL
+        value: claude-sonnet-5
+      - key: ANTHROPIC_API_KEY
+        sync: false
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL

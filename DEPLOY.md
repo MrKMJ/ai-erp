@@ -44,6 +44,23 @@ python -m scripts.seed_remote --api https://<your-api>.onrender.com
 
 Then open the web URL and log in with `owner@demo-erp.com` / `demo12345`.
 
+### 4. AI features
+
+They're already live on `AI_PROVIDER=rule` — the AI Command Center, the "Ask
+your ERP" chat (routes questions to real ERP tools and shows the evidence),
+recommendations, forecasting and anomaly detection all work with **no API key**.
+The `rule` planner just phrases answers deterministically instead of with an LLM.
+
+For LLM-generated prose, on `ai-erp-api` → **Environment**:
+
+- `ANTHROPIC_API_KEY` = your key from the
+  [Anthropic Console](https://console.anthropic.com/settings/keys)
+  (this is separate from a Claude.ai / Claude Code subscription)
+- `AI_PROVIDER` = `anthropic`
+
+Save → the service redeploys. Permission and risk gates are unchanged; if the
+model call fails the gateway falls back to tool results + a notice, never a 500.
+
 ### Free-tier realities
 
 - **Cold start** — the API sleeps after 15 min idle; the next request wakes it in
