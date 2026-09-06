@@ -64,10 +64,10 @@ function Inner() {
 
       {tb.data && (
         <>
-          <h2 className="mb-2 mt-8 flex items-center gap-2 font-semibold">
+          <h2 className="mb-3 mt-8 flex items-center gap-2 text-sm font-semibold text-fg">
             Trial balance
             <span
-              className={`text-xs font-normal ${tbBalanced ? "text-emerald-600" : "text-red-600"}`}
+              className={`text-xs font-normal ${tbBalanced ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}
             >
               {tbBalanced ? "· balanced" : "· OUT OF BALANCE"}
             </span>
@@ -91,7 +91,7 @@ function Inner() {
         </>
       )}
 
-      <h2 className="mb-2 mt-8 font-semibold">Journal entries</h2>
+      <h2 className="mb-3 mt-8 text-sm font-semibold text-fg">Journal entries</h2>
       <Table
         rows={journal.data || []}
         rowKey={(r) => r.id}

@@ -3,7 +3,7 @@
 import AppShell from "@/components/AppShell";
 import { PageHeader, Table, Badge, ErrorBanner } from "@/components/ui";
 import { useFetch } from "@/lib/useFetch";
-import { money, num, date } from "@/lib/format";
+import { money, num, date, chipTone } from "@/lib/format";
 import type { InventoryRow } from "@/lib/types";
 
 interface LedgerRow {
@@ -33,7 +33,7 @@ function Inner() {
       <PageHeader title="Inventory" subtitle="Positions are derived from an append-only ledger" />
       <ErrorBanner message={position.error} />
 
-      <h2 className="mb-2 font-semibold">Stock position</h2>
+      <h2 className="mb-3 text-sm font-semibold text-fg">Stock position</h2>
       <Table
         rows={position.data || []}
         rowKey={(r) => r.product_id}
@@ -48,15 +48,15 @@ function Inner() {
             header: "Status",
             cell: (r) =>
               r.below_reorder ? (
-                <Badge className="bg-amber-100 text-amber-800 border-amber-200">below reorder</Badge>
+                <Badge className={chipTone.warn}>below reorder</Badge>
               ) : (
-                <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">ok</Badge>
+                <Badge className={chipTone.good}>ok</Badge>
               ),
           },
         ]}
       />
 
-      <h2 className="mb-2 mt-8 font-semibold">Recent movements</h2>
+      <h2 className="mb-3 mt-8 text-sm font-semibold text-fg">Recent movements</h2>
       <Table
         rows={ledger.data || []}
         rowKey={(r) => r.id}
@@ -68,7 +68,7 @@ function Inner() {
             header: "Qty",
             className: "text-right",
             cell: (r) => (
-              <span className={r.quantity < 0 ? "text-red-600" : "text-emerald-600"}>
+              <span className={r.quantity < 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>
                 {r.quantity > 0 ? "+" : ""}
                 {num(r.quantity)}
               </span>

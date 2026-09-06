@@ -2,11 +2,16 @@
 
 import { useState } from "react";
 import AppShell from "@/components/AppShell";
-import { PageHeader, Table, Badge, Modal, ErrorBanner, useAsyncAction } from "@/components/ui";
+import { PageHeader, Table, Badge, Tabs, Modal, ErrorBanner, useAsyncAction } from "@/components/ui";
 import { useFetch } from "@/lib/useFetch";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
-import { money, num } from "@/lib/format";
+import { money, num, statusChip, chipTone } from "@/lib/format";
+
+const TABS = [
+  { id: "orders", label: "Production orders" },
+  { id: "boms", label: "Bills of materials" },
+] as const;
 
 interface Product {
   id: string;
@@ -46,13 +51,6 @@ interface MaterialRow {
   on_hand: number;
   shortfall: number;
 }
-
-const STATUS_STYLE: Record<string, string> = {
-  planned: "bg-slate-100 text-slate-600 border-slate-200",
-  released: "bg-sky-100 text-sky-700 border-sky-200",
-  in_progress: "bg-amber-100 text-amber-800 border-amber-200",
-  done: "bg-emerald-100 text-emerald-700 border-emerald-200",
-};
 
 export default function ManufacturingPage() {
   return (
@@ -105,19 +103,7 @@ function Inner() {
       />
       <ErrorBanner message={action.error || orders.error} />
 
-      <div className="mb-4 flex gap-1">
-        {(["orders", "boms"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium capitalize ${
-              tab === t ? "bg-brand-600 text-white" : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            {t === "boms" ? "Bills of materials" : "Production orders"}
-          </button>
-        ))}
-      </div>
+      <Tabs tabs={TABS} value={tab} onChange={setTab} />
 
       {tab === "orders" && (
         <div className="space-y-3">
@@ -132,15 +118,15 @@ function Inner() {
                 header: "Source",
                 cell: (r) =>
                   r.source === "ai" ? (
-                    <Badge className="bg-brand-50 text-brand-700 border-brand-100">AI</Badge>
+                    <Badge className={chipTone.brand}>AI</Badge>
                   ) : (
-                    <span className="text-xs text-slate-400">user</span>
+                    <span className="text-xs text-faint">user</span>
                   ),
               },
               {
                 header: "Status",
                 cell: (r) => (
-                  <Badge className={STATUS_STYLE[r.status] || STATUS_STYLE.planned}>
+                  <Badge className={statusChip(r.status)}>
                     {r.status.replace("_", " ")}
                   </Badge>
                 ),
@@ -213,11 +199,11 @@ function Inner() {
               header: "Active",
               cell: (r) =>
                 r.is_active ? (
-                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                  <Badge className={chipTone.good}>
                     active
                   </Badge>
                 ) : (
-                  <span className="text-xs text-slate-400">superseded</span>
+                  <span className="text-xs text-faint">superseded</span>
                 ),
             },
           ]}
@@ -262,9 +248,9 @@ function MaterialPanel({ orderId }: { orderId: string }) {
             className: "text-right",
             cell: (r) =>
               r.shortfall > 0 ? (
-                <span className="font-semibold text-red-600">{num(r.shortfall)}</span>
+                <span className="font-semibold text-rose-600 dark:text-rose-400">{num(r.shortfall)}</span>
               ) : (
-                <span className="text-emerald-600">0</span>
+                <span className="text-emerald-600 dark:text-emerald-400">0</span>
               ),
           },
         ]}
@@ -328,7 +314,7 @@ function MoForm({
             ))}
           </select>
           {options.length === 0 && (
-            <p className="mt-1 text-xs text-amber-600">
+            <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
               No products have an active BOM yet — create one first.
             </p>
           )}
@@ -494,7 +480,7 @@ function BomForm({
               />
               <button
                 type="button"
-                className="px-2 text-slate-400 hover:text-red-500"
+                className="px-2 text-faint hover:text-rose-500"
                 onClick={() => setLines((ls) => ls.filter((_, idx) => idx !== i))}
               >
                 ✕

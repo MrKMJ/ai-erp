@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { API_URL } from "@/lib/api";
+import { Icon } from "@/components/icons";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function LoginPage() {
   const { login, me, loading } = useAuth();
@@ -31,12 +33,27 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="card w-full max-w-sm p-6">
-        <div className="mb-1 text-xl font-bold text-brand-700">AI ERP</div>
-        <p className="mb-5 text-sm text-slate-500">Sign in to your workspace</p>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden p-4">
+      <div
+        className="pointer-events-none absolute -top-40 left-1/2 h-[36rem] w-[36rem] -translate-x-1/2 rounded-full opacity-40 blur-3xl"
+        style={{ background: "radial-gradient(closest-side, rgb(99 102 241 / 0.5), transparent)" }}
+      />
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
 
-        <form onSubmit={submit} className="space-y-3">
+      <div className="card animate-fade-in relative w-full max-w-sm p-7 shadow-pop">
+        <div className="mb-6 flex items-center gap-2.5">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-sm">
+            <Icon.spark width={18} height={18} />
+          </div>
+          <div>
+            <div className="text-base font-semibold tracking-tight text-fg">AI ERP</div>
+            <div className="text-xs text-faint">Sign in to your workspace</div>
+          </div>
+        </div>
+
+        <form onSubmit={submit} className="space-y-3.5">
           <div>
             <label className="label">Email</label>
             <input
@@ -45,6 +62,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="username"
+              autoFocus
             />
           </div>
           <div>
@@ -57,17 +75,20 @@ export default function LoginPage() {
               autoComplete="current-password"
             />
           </div>
-          {error && <div className="text-sm text-red-600">{error}</div>}
+          {error && (
+            <div className="rounded-lg border border-rose-500/25 bg-rose-500/10 px-3 py-2 text-sm text-rose-600 dark:text-rose-300">
+              {error}
+            </div>
+          )}
           <button className="btn-primary w-full" disabled={busy}>
             {busy ? "Signing in…" : "Sign in"}
           </button>
         </form>
 
-        <p className="mt-4 text-center text-xs text-slate-400">
-          Demo: owner@demo-erp.com / demo12345
-          <br />
-          API: {API_URL}
-        </p>
+        <div className="mt-5 border-t border-line pt-4 text-center text-xs text-faint">
+          <span className="font-medium text-muted">Demo</span> · owner@demo-erp.com / demo12345
+          <div className="mt-1 truncate">API: {API_URL}</div>
+        </div>
       </div>
     </div>
   );

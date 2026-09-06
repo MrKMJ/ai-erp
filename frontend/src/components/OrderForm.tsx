@@ -171,7 +171,7 @@ export function OrderForm({
               />
               <button
                 type="button"
-                className="px-2 text-slate-400 hover:text-red-500"
+                className="px-2 text-faint hover:text-rose-500"
                 onClick={() => setLines((ls) => ls.filter((_, idx) => idx !== i))}
               >
                 ✕

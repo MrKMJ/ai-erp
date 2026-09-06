@@ -14,9 +14,9 @@ export default function Markdown({ children }: { children: string }) {
           ul: (props) => <ul className="list-disc space-y-1 pl-5" {...props} />,
           ol: (props) => <ol className="list-decimal space-y-1 pl-5" {...props} />,
           li: (props) => <li {...props} />,
-          a: (props) => <a className="text-brand-600 underline" {...props} />,
+          a: (props) => <a className="text-brand-600 underline dark:text-brand-400" {...props} />,
           code: (props) => (
-            <code className="rounded bg-slate-200/70 px-1 py-0.5 text-[0.85em]" {...props} />
+            <code className="rounded bg-surface-2 px-1 py-0.5 text-[0.85em]" {...props} />
           ),
           table: (props) => (
             <div className="overflow-x-auto">
@@ -24,9 +24,9 @@ export default function Markdown({ children }: { children: string }) {
             </div>
           ),
           th: (props) => (
-            <th className="border border-slate-300 bg-slate-50 px-2 py-1 text-left font-semibold" {...props} />
+            <th className="border border-line bg-surface-2 px-2 py-1 text-left font-semibold" {...props} />
           ),
-          td: (props) => <td className="border border-slate-200 px-2 py-1" {...props} />,
+          td: (props) => <td className="border border-line px-2 py-1" {...props} />,
         }}
       >
         {children}

@@ -2,12 +2,19 @@
 
 import { useState } from "react";
 import AppShell from "@/components/AppShell";
-import { PageHeader, Table, Badge, ErrorBanner, useAsyncAction } from "@/components/ui";
+import { PageHeader, Table, Badge, Tabs, ErrorBanner, useAsyncAction } from "@/components/ui";
 import { OrderForm } from "@/components/OrderForm";
 import { useFetch } from "@/lib/useFetch";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
-import { money } from "@/lib/format";
+import { money, statusChip, chipTone } from "@/lib/format";
+
+const TABS = [
+  { id: "orders", label: "Orders" },
+  { id: "approvals", label: "Approvals" },
+  { id: "bills", label: "Bills" },
+  { id: "payables", label: "Payables" },
+] as const;
 
 interface PO {
   id: string;
@@ -36,16 +43,6 @@ interface AP {
   balance: number;
   overdue: boolean;
 }
-
-const STATUS_STYLE: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-600 border-slate-200",
-  pending_approval: "bg-amber-100 text-amber-800 border-amber-200",
-  approved: "bg-sky-100 text-sky-700 border-sky-200",
-  received: "bg-indigo-100 text-indigo-700 border-indigo-200",
-  billed: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  posted: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  paid: "bg-emerald-100 text-emerald-700 border-emerald-200",
-};
 
 export default function PurchasingPage() {
   return (
@@ -104,19 +101,7 @@ function Inner() {
       />
       <ErrorBanner message={action.error || orders.error} />
 
-      <div className="mb-4 flex gap-1">
-        {(["orders", "approvals", "bills", "payables"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium capitalize ${
-              tab === t ? "bg-brand-600 text-white" : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
+      <Tabs tabs={TABS} value={tab} onChange={setTab} />
 
       {tab === "orders" && (
         <Table
@@ -129,15 +114,15 @@ function Inner() {
               header: "Source",
               cell: (r) =>
                 r.source === "ai" ? (
-                  <Badge className="bg-brand-50 text-brand-700 border-brand-100">AI</Badge>
+                  <Badge className={chipTone.brand}>AI</Badge>
                 ) : (
-                  <span className="text-xs text-slate-400">user</span>
+                  <span className="text-xs text-faint">user</span>
                 ),
             },
             {
               header: "Status",
               cell: (r) => (
-                <Badge className={STATUS_STYLE[r.status] || STATUS_STYLE.draft}>{r.status}</Badge>
+                <Badge className={statusChip(r.status)}>{r.status}</Badge>
               ),
             },
             { header: "Total", className: "text-right", cell: (r) => money(r.total) },
@@ -185,7 +170,7 @@ function Inner() {
               header: "Requested by",
               cell: (r) =>
                 r.requested_by_kind === "ai" ? (
-                  <Badge className="bg-brand-50 text-brand-700 border-brand-100">AI</Badge>
+                  <Badge className={chipTone.brand}>AI</Badge>
                 ) : (
                   "user"
                 ),
@@ -223,7 +208,7 @@ function Inner() {
             {
               header: "Status",
               cell: (r) => (
-                <Badge className={STATUS_STYLE[r.status] || STATUS_STYLE.draft}>{r.status}</Badge>
+                <Badge className={statusChip(r.status)}>{r.status}</Badge>
               ),
             },
             { header: "Total", className: "text-right", cell: (r) => money(r.total) },
@@ -255,7 +240,7 @@ function Inner() {
               header: "Balance",
               className: "text-right",
               cell: (r) => (
-                <span className={r.overdue ? "font-semibold text-red-600" : ""}>
+                <span className={r.overdue ? "font-semibold text-rose-600 dark:text-rose-400" : ""}>
                   {money(r.balance)}
                 </span>
               ),
