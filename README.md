@@ -59,6 +59,14 @@ docker compose up --build              # db + api (migrations auto-run) + web on
 docker compose run --rm api seed       # optional demo data
 ```
 
+## Deploy
+
+- **Free, no card** — push to GitHub, then Render **New → Blueprint** on the repo
+  ([`render.yaml`](render.yaml): API + static frontend + Postgres).
+- **Always-on** — `./deploy.sh` (Fly.io).
+
+Full walkthrough, config reference and rollback in [DEPLOY.md](DEPLOY.md).
+
 ## Database migrations
 
 Dev/SQLite auto-creates tables (`AUTO_CREATE_TABLES=true`). Everywhere else:

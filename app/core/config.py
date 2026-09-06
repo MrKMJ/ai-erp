@@ -1,9 +1,22 @@
 from functools import lru_cache
 
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 INSECURE_SECRET = "change-me-in-production-please"
+
+
+def normalize_db_url(url: str) -> str:
+    """Accept the URL shapes hosting platforms hand out.
+
+    Render / Neon / Heroku / Railway give `postgres://` or `postgresql://`;
+    SQLAlchemy 2 + our driver want `postgresql+psycopg://`.
+    """
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://"):]
+    if url.startswith("postgresql://"):
+        url = "postgresql+psycopg://" + url[len("postgresql://"):]
+    return url
 
 
 class Settings(BaseSettings):
@@ -41,6 +54,11 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     ai_model: str = "claude-sonnet-5"
     ai_max_tokens: int = 1024
+
+    @field_validator("database_url")
+    @classmethod
+    def _normalize_database_url(cls, v: str) -> str:
+        return normalize_db_url(v)
 
     @property
     def cors_origin_list(self) -> list[str]:

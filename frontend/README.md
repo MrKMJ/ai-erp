@@ -58,8 +58,10 @@ when you want analysis.
 
 - Global toast notifications, `error.tsx` boundary, `not-found.tsx`, `loading.tsx`,
   and a mobile drawer nav are wired in.
-- `output: "standalone"` in `next.config.mjs` for a small Docker image; see
-  `Dockerfile` / `fly.toml` and the repo's `DEPLOY.md`.
+- Build target is env-driven (`next.config.mjs`): default `standalone` (Node server
+  bundle, for the Docker image / Fly), or `NEXT_OUTPUT=export npm run build` for a
+  fully static site in `out/` (Render / Netlify / Cloudflare Pages / GitHub Pages —
+  all free). Every page is a client component, so the static build is complete.
 - ESLint is not wired into `next build` (no `eslint-config-next` dependency).
   TypeScript type-checking still runs.
 - Auth is client-side only (JWT in `localStorage`); there is no SSR-protected route.

@@ -44,12 +44,32 @@ export async function api<T = unknown>(path: string, opts: Options = {}): Promis
     payload = JSON.stringify(body);
   }
 
+  // Free hosting (Render/Fly free tiers) sleeps the API after inactivity; the first
+  // request wakes it and can take ~50s or briefly 502/503. Retry with backoff.
   let res: Response;
-  try {
-    res = await fetch(`${API_URL}${path}`, { method, headers, body: payload });
-  } catch {
-    throw new ApiError(`Cannot reach the API at ${API_URL}. Is the backend running?`, 0);
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      res = await fetch(`${API_URL}${path}`, { method, headers, body: payload });
+      if (res.status === 502 || res.status === 503 || res.status === 504) {
+        lastErr = new ApiError(`API waking up (${res.status})`, res.status);
+        await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+        continue;
+      }
+      lastErr = undefined;
+      break;
+    } catch (e) {
+      lastErr = e;
+      await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+    }
   }
+  if (lastErr !== undefined) {
+    throw new ApiError(
+      `Cannot reach the API at ${API_URL}. It may be starting up — try again in a moment.`,
+      0,
+    );
+  }
+  res = res!;
 
   if (res.status === 401) {
     setToken(null);
