@@ -35,11 +35,18 @@ class RuleProvider:
 
     def plan(self, message: str, history: list[dict]) -> dict:
         text = message.lower()
-        scored: list[tuple[int, str]] = []
+        order = list(REGISTRY)
+        scored: list[tuple[int, int, str]] = []
         for tname, t in REGISTRY.items():
-            hits = sum(1 for kw in t.keywords if kw in text)
-            if hits:
-                scored.append((hits, tname))
+            score = 0
+            for kw in t.keywords:
+                # whole-word / whole-phrase match (so "ar" doesn't fire on "summary"),
+                # tolerating a simple plural on the last word
+                if re.search(rf"(?<!\w){re.escape(kw)}(?:s|es)?(?!\w)", text):
+                    score += 1 + kw.count(" ")  # multi-word phrases are stronger signals
+            if score:
+                # tie-break: earlier-registered tool wins (read tools are registered first)
+                scored.append((score, -order.index(tname), tname))
         if not scored:
             return {
                 "text": (
@@ -51,7 +58,7 @@ class RuleProvider:
                 "tool_calls": [],
             }
         scored.sort(reverse=True)
-        tname = scored[0][1]
+        tname = scored[0][2]
         args: dict[str, Any] = {}
         m = re.search(r"\b(?:sku|product)\s+([A-Za-z0-9\-]+)", message)
         if m:

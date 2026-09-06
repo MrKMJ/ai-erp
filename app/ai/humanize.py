@@ -137,21 +137,32 @@ def _inv(r: dict) -> str:
     if not rows:
         return "No products are being tracked yet."
     low = [x for x in rows if x.get("below_reorder")]
-    if low and len(low) < len(rows):
-        out = [f"**{plural(len(low), 'product')} at or below the reorder level:**", ""]
+    units = sum(float(x.get("on_hand", 0)) for x in rows)
+    value = sum(float(x.get("on_hand", 0)) * float(x.get("avg_cost", 0)) for x in rows)
+
+    out = [
+        f"You're tracking **{plural(len(rows), 'product')}**, "
+        f"**{qty(units)} units** in stock"
+        + (f" worth about **{money(value)}**" if value else "")
+        + ".",
+    ]
+    if low:
+        out += ["", f"**{plural(len(low), 'product')} need reordering:**"]
         for x in low:
             out.append(
-                f"- **{x['name']}** ({x['sku']}) — {qty(x['on_hand'])} in stock, "
-                f"reorder point is {qty(x['reorder_level'])}"
+                f"- **{x['name']}** ({x['sku']}) — {qty(x['on_hand'])} left, "
+                f"reorder at {qty(x['reorder_level'])}"
             )
-        out.append("\nEverything else has enough stock.")
-        return "\n".join(out)
-    out = [f"**Stock on hand — {len(rows)} products:**", "",
-           "| Product | In stock | Reorder at | Status |", "|---|---|---|---|"]
-    for x in rows[:20]:
-        status = "🔴 low" if x.get("below_reorder") else "🟢 ok"
+    else:
+        out.append("\nEverything is above its reorder level. 🟢")
+
+    out += ["", "| Product | In stock | Reorder at | |", "|---|---:|---:|:--|"]
+    for x in sorted(rows, key=lambda r: (not r.get("below_reorder"), r["name"]))[:20]:
+        flag = "🔴" if x.get("below_reorder") else "🟢"
         out.append(f"| {x['name']} ({x['sku']}) | {qty(x['on_hand'])} | "
-                   f"{qty(x['reorder_level'])} | {status} |")
+                   f"{qty(x['reorder_level'])} | {flag} |")
+    if len(rows) > 20:
+        out.append(f"\n…and {len(rows) - 20} more.")
     return "\n".join(out)
 
 

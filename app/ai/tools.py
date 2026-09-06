@@ -102,7 +102,8 @@ def _tb(ctx: ToolContext, args: dict):
     name="get_receivables", description="Outstanding customer invoices (who owes us money).",
     permission="sales.read", risk="read",
     parameters={"type": "object", "properties": {}},
-    keywords=["receivable", "owes us", "ar", "unpaid invoice", "collect"],
+    keywords=["receivable", "owes us", "who owes", "unpaid invoice", "outstanding invoice",
+              "collect"],
 )
 def _ar(ctx: ToolContext, args: dict):
     rows = sal.outstanding_receivables(ctx.db, ctx.tenant_id)
@@ -113,7 +114,7 @@ def _ar(ctx: ToolContext, args: dict):
     name="get_payables", description="Outstanding supplier bills (who we owe money to).",
     permission="purchase.read", risk="read",
     parameters={"type": "object", "properties": {}},
-    keywords=["payable", "we owe", "ap", "supplier bill", "pay supplier"],
+    keywords=["payable", "we owe", "who we owe", "supplier bill", "pay supplier"],
 )
 def _ap(ctx: ToolContext, args: dict):
     rows = pur.outstanding_payables(ctx.db, ctx.tenant_id)
@@ -163,7 +164,8 @@ def _demand(ctx: ToolContext, args: dict):
     permission="inventory.read", risk="read",
     parameters={"type": "object", "properties": {
         "product_id": {"type": "string"}, "sku": {"type": "string"}}},
-    keywords=["stockout", "run out", "shortage", "will we have enough"],
+    keywords=["stockout", "stock out", "run out", "running low", "shortage",
+              "will we have enough"],
 )
 def _risk(ctx: ToolContext, args: dict):
     if args.get("product_id") or args.get("sku"):
