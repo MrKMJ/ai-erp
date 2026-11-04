@@ -123,9 +123,33 @@ def main() -> None:
                               unit_cost=float(p.cost_price), note="opening balance", created_by=uid)
         db.commit()
 
-        # ~90 days of sales
+        from app.models.purchasing import PurchaseOrder
+
+        def restock(threshold_extra: float) -> None:
+            """Reorder any product that has fallen near its reorder level, like a buyer would."""
+            for p in products:
+                on_hand = inv.on_hand(db, tid, p.id, wh.id)
+                if on_hand >= float(p.reorder_level) + threshold_extra:
+                    continue
+                qty = float(p.reorder_level) * 2 + 60
+                po = pur.create_order(db, tid, uid, {
+                    "supplier_id": suppliers[0].id, "warehouse_id": wh.id,
+                    "lines": [{"product_id": p.id, "quantity": qty,
+                               "unit_cost": float(p.cost_price), "tax_rate": 0.1}],
+                })
+                res = pur.submit_for_approval(db, tid, uid, po.id)
+                if res["status"] == "pending_approval":
+                    pur.decide_approval(db, tid, uid, res["approval_request_id"], True,
+                                        "Routine replenishment")
+                pur.receive(db, tid, uid, po.id)
+                pur.create_bill(db, tid, uid, po.id)
+            db.commit()
+
+        # ~90 days of sales, with replenishment every few days
         start = date.today() - timedelta(days=90)
         for day in range(90):
+            if day % 3 == 0 and day < 84:
+                restock(threshold_extra=60)
             d = start + timedelta(days=day)
             for _ in range(random.randint(1, 3)):
                 cust = random.choice(customers)
@@ -144,8 +168,6 @@ def main() -> None:
 
         # recurring purchases from one supplier for product[0], last two spiked
         # -> produces a clean SUPPLIER_ANOMALY recommendation
-        from app.models.purchasing import PurchaseOrder
-
         for k in range(9):
             sup = suppliers[1]
             spike = 1.0 if k < 7 else 1.45
