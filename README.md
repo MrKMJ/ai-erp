@@ -163,3 +163,14 @@ levels, specialised autonomous agents. The extension points (event bus, tool
 registry, recommendation entity, agent-ready gateway) are in place. Forecasting /
 anomaly models are statistical baselines — swap for scikit-learn / XGBoost /
 Prophet behind the same service interface.
+
+---
+
+## Hire me to build this for you
+
+Want an AI layer like this inside your own CRM or ERP, or a custom web app around it? I take on this work through Fiverr.
+
+- [Automate your CRM or ERP with AI chatbots, APIs and workflows](https://www.fiverr.com/moinjamal/automate-your-crm-or-erp-with-ai-chatbots-apis-and-workflow-integration)
+- [Django REST API + React web app for your AI or SaaS product](https://www.fiverr.com/moinjamal/build-a-django-rest-api-and-react-web-app-for-your-ai-or-saas-product)
+
+[![Hire me on Fiverr](https://img.shields.io/badge/Hire_me_on-Fiverr-1DBF73?style=for-the-badge&logo=fiverr&logoColor=white)](https://www.fiverr.com/moinjamal)
